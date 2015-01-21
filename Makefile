@@ -1,8 +1,8 @@
 APPNAME=turses
 
-PY=python
+PY=python3
 DIST=$(PY) setup.py sdist
-PIPI=pip install
+PIPI=pip3 install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=py.test
