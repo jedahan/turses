@@ -465,7 +465,7 @@ class Status(object):
         """Return a human readable string representing the posting time."""
         # This code is borrowed from `python-twitter` library
         fudge = 1.25
-        delta = long(time.time()) - timestamp_from_datetime(self.created_at)
+        delta = int(time.time()) - timestamp_from_datetime(self.created_at)
 
         if delta < (1 * fudge):
             return "a second ago"
@@ -531,7 +531,7 @@ class Status(object):
         Return a list of hashtags encountered in `status`.
         """
         # TODO: use self.entities
-        return filter(is_hashtag, self.text.split())
+        return list(filter(is_hashtag, self.text.split()))
 
     def dm_recipients_username(self, sender):
         """

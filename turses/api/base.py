@@ -38,26 +38,26 @@ def get_authorization_tokens():
     oauth_client = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY,
                                        TWITTER_CONSUMER_SECRET)
 
-    print _('Requesting temporary token from Twitter')
+    print(_('Requesting temporary token from Twitter'))
 
     try:
         authorization_url_with_token = oauth_client.get_authorization_url()
     except tweepy.TweepError:
-        print 'Error! Failed to get request token.'
+        print('Error! Failed to get request token.')
         return None
 
-    print
-    print _('Please visit the following page to retrieve the pin code needed '
-            'to obtain an Authorization Token:')
-    print
-    print authorization_url_with_token
-    print
+    print()
+    print(_('Please visit the following page to retrieve the pin code needed '
+            'to obtain an Authorization Token:'))
+    print()
+    print(authorization_url_with_token)
+    print()
 
-    verifier = raw_input(_('Pin code? '))
+    verifier = input(_('Pin code? '))
 
-    print
-    print encode(_('Generating and signing request for an access token'))
-    print
+    print()
+    print(encode(_('Generating and signing request for an access token')))
+    print()
 
     # Use the "pin code"/verifier to authorize to access to the account
     try:
@@ -67,16 +67,15 @@ def get_authorization_tokens():
         access_tokens['oauth_token_secret'] = oauth_client.access_token_secret
         return access_tokens
     except tweepy.TweepError:
-        print 'Error! Failed to get access token.'
+        print('Error! Failed to get access token.')
         return None
 
 
-class ApiAdapter(object):
+class ApiAdapter(object, metaclass=ABCMeta):
     """
     A simplified version of the API to use as an adapter for a real
     implementation.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self,
                  access_token_key,

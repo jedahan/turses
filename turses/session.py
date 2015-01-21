@@ -57,7 +57,7 @@ named ``interactions`` by executing:
 
 import re
 import logging
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from os import path
 from gettext import gettext as _
 

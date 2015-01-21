@@ -8,7 +8,7 @@ import os
 import logging
 import re
 from gettext import gettext as _
-from htmlentitydefs import entitydefs
+from html.entities import entitydefs
 
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
@@ -29,6 +29,7 @@ from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            configuration)
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode, is_hashtag, is_username, is_url
+import collections
 
 
 def surround_with_spaces(s):
@@ -56,7 +57,7 @@ def apply_attribute(string,
     >>> apply_attribute('turses')
     u'turses'
     """
-    string = unicode(string)
+    string = str(string)
 
     if is_hashtag(string):
         return (hashtag, string)
@@ -84,7 +85,7 @@ def parse_attributes(text,
 
     # nothing to do
     if not text:
-        return u''
+        return ''
 
     words = text.split()
     parsed_text = [apply_attribute(word) for word in words]
@@ -107,10 +108,10 @@ def parse_attributes(text,
             indices.append(i + 1 + len(indices))
 
     for index in indices:
-        tweet.insert(index, u' ')
+        tweet.insert(index, ' ')
 
     # remove trailing withespace
-    if tweet and isinstance(tweet[-1], basestring):
+    if tweet and isinstance(tweet[-1], str):
         tweet[-1] = tweet[-1][:-1]
 
     return tweet
@@ -203,7 +204,7 @@ def map_attributes(status, hashtag, attag, url):
                                             url=url)
 
     text = []
-    status_text = unicode(status.text)
+    status_text = str(status.text)
     # start from the beggining
     index = 0
     for mapping in attribute_mappings:
@@ -357,11 +358,11 @@ class CursesInterface(WidgetWrap):
         self.frame.body.focus_timeline(index)
 
     def focus_status(self, index):
-        if callable(getattr(self.frame.body, 'set_focus', None)):
+        if isinstance(getattr(self.frame.body, 'set_focus', None), collections.Callable):
             self.frame.body.set_focus(index)
 
     def center_focus(self):
-        if callable(getattr(self.frame.body, 'set_focus_valign', None)):
+        if isinstance(getattr(self.frame.body, 'set_focus_valign', None), collections.Callable):
             logging.debug('centering focus')
             self.frame.body.set_focus_valign('middle')
 
@@ -440,7 +441,7 @@ class CursesInterface(WidgetWrap):
     def hide_editor(self, done_signal_handler):
         try:
             disconnect_signal(self._editor, 'done', done_signal_handler)
-        except Exception, message:
+        except Exception as message:
             # `disconnect_signal` raises an exception if no signal was
             # connected from `self._editor`. we can safely ignore it.
             logging.exception(message)
@@ -539,10 +540,8 @@ class Banner(WidgetWrap):
 # - Editors -------------------------------------------------------------------
 
 
-class BaseEditor(WidgetWrap):
+class BaseEditor(WidgetWrap, metaclass=signals.MetaSignals):
     """Base class for editors."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -564,8 +563,8 @@ class BaseEditor(WidgetWrap):
         and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
         `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
-        caption = _(u'{0} (Enter key twice to validate, '
-                    u'Esc or Ctrl-C to cancel) \n>> ').format(prompt)
+        caption = _('{0} (Enter key twice to validate, '
+                    'Esc or Ctrl-C to cancel) \n>> ').format(prompt)
         if content:
             content += ' '
         self.content = content
@@ -605,10 +604,8 @@ class BaseEditor(WidgetWrap):
         emit_signal(self, 'done', content)
 
 
-class TextEditor(BaseEditor):
+class TextEditor(BaseEditor, metaclass=signals.MetaSignals):
     """Editor for creating arbitrary text."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -623,10 +620,8 @@ class TextEditor(BaseEditor):
         self._wrap(self.editor)
 
 
-class TweetEditor(BaseEditor):
+class TweetEditor(BaseEditor, metaclass=signals.MetaSignals):
     """Editor for creating tweets."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -658,10 +653,8 @@ class TweetEditor(BaseEditor):
             self.emit_done_signal(self.editor.get_edit_text())
 
 
-class DmEditor(TweetEditor):
+class DmEditor(TweetEditor, metaclass=signals.MetaSignals):
     """Editor for creating DMs."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -709,11 +702,11 @@ class TabsWidget(WidgetWrap):
         text = []
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
-                text.append(('active_tab', u'│' + tab + u' '))
+                text.append(('active_tab', '│' + tab + ' '))
             elif i in self.visible_indexes:
-                text.append(('visible_tab', u'│' + tab + u' '))
+                text.append(('visible_tab', '│' + tab + ' '))
             else:
-                text.append(('inactive_tab', u'│' + tab + u' '))
+                text.append(('inactive_tab', '│' + tab + ' '))
         return text
 
     def _update_text(self):
@@ -721,7 +714,7 @@ class TabsWidget(WidgetWrap):
         self._w = Text(text)
 
     def append_tab(self, tab):
-        self.tabs.append(unicode(tab))
+        self.tabs.append(str(tab))
         self._update_text()
 
     def delete_current_tab(self):
@@ -1104,7 +1097,7 @@ class StatusWidget(WidgetWrap):
         # create header
         styles = configuration.styles
         header_template = ' ' + styles.get('header_template') + ' '
-        header = unicode(header_template).format(
+        header = str(header_template).format(
             username=username,
             retweeted=retweeted,
             retweeter=retweeter,
@@ -1118,7 +1111,7 @@ class StatusWidget(WidgetWrap):
     def _dm_header(self, dm):
         dm_template = ''.join([' ', configuration.styles['dm_template'], ' '])
         relative_created_at = dm.relative_created_at
-        header = unicode(dm_template).format(
+        header = str(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
             recipient_screen_name=dm.recipient_screen_name,
             time=relative_created_at,
@@ -1131,9 +1124,9 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
     """Draw a box around `original_widget`."""
 
     def __init__(self, original_widget, title="",
-                 tlcorner=u'┌', tline=u'─', lline=u'│',
-                 trcorner=u'┐', blcorner=u'└', rline=u'│',
-                 bline=u'─', brcorner=u'┘'):
+                 tlcorner='┌', tline='─', lline='│',
+                 trcorner='┐', blcorner='└', rline='│',
+                 bline='─', brcorner='┘'):
         """
         Use 'title' to set an initial title text with will be centered
         on top of the box.
@@ -1185,12 +1178,10 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 # - User ----------------------------------------------------------------------
 
 
-class UserInfo(WidgetWrap):
+class UserInfo(WidgetWrap, metaclass=signals.MetaSignals):
     """
     A widget for displaying a Twitter user info.
     """
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self, user, last_statuses):
@@ -1198,7 +1189,7 @@ class UserInfo(WidgetWrap):
         Receive a ``user`` and its ``last_statuses`` to render the widget.
         """
         whitespace = Divider(' ')
-        widgets = [Text(u"{0}".format(user.name)), whitespace]
+        widgets = [Text("{0}".format(user.name)), whitespace]
 
         # bio
         if user.description:
@@ -1236,7 +1227,7 @@ class UserInfo(WidgetWrap):
 
 
 def sanitize(text):
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return html_unescape(text)
     else:
         return text

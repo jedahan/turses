@@ -8,6 +8,7 @@ import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
 from threading import Thread
+import collections
 
 
 # - Decorators ----------------------------------------------------------------
@@ -29,12 +30,12 @@ def wrap_exceptions(func):
 
         try:
             result = func(self, *args, **kwargs)
-        except Exception, message:
-            if callable(on_error):
+        except Exception as message:
+            if isinstance(on_error, collections.Callable):
                 logging.exception(message)
                 on_error()
         else:
-            if callable(on_success):
+            if isinstance(on_success, collections.Callable):
                 on_success()
             return result
 
@@ -71,7 +72,7 @@ def filter_result(func, filter_func=None):
 # - Abstract classes ----------------------------------------------------------
 
 # FIXME: Use urwid.MonitoredFocusList
-class ActiveList(object):
+class ActiveList(object, metaclass=ABCMeta):
     """
     A list that contains an *active* element.
 
@@ -81,7 +82,6 @@ class ActiveList(object):
     :func:`turses.meta.ActiveList.activate_last`.
     methods.
     """
-    __metaclass__ = ABCMeta
 
     NULL_INDEX = -1
 
@@ -154,7 +154,7 @@ class UnsortedActiveList(ActiveList):
         pass
 
 
-class Updatable:
+class Updatable(metaclass=ABCMeta):
     """
     An abstract class for making a class *updatable*.
 
@@ -165,8 +165,6 @@ class Updatable:
     :func:`~turses.meta.Updatable.update_callback` is called, passing it the
     result.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self,
                  update_function=None,
@@ -253,13 +251,11 @@ class Observable:
             observer.update()
 
 
-class Observer:
+class Observer(metaclass=ABCMeta):
     """
     An abstract class that can subscribe to updates from
     :class:`~turses.meta.Observable` instances.
     """
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def update(self):

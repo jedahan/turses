@@ -347,7 +347,7 @@ class Controller(Observer):
 
         try:
             self.loop.run()
-        except TweepError, message:
+        except TweepError as message:
             logging.exception(message)
             self.error_message(_('API error: %s' % message))
             # recover from API errors
@@ -810,7 +810,7 @@ class Controller(Observer):
         if hasattr(self, "loop"):
             try:
                 self.loop.draw_screen()
-            except AssertionError, message:
+            except AssertionError as message:
                 logging.critical(message)
 
     # -- Editor ---------------------------------------------------------------
@@ -1321,6 +1321,6 @@ class Controller(Observer):
             # split the URLs up for them
             for url in urls:
                 webbrowser.open(url)
-        except Exception, message:
+        except Exception as message:
             logging.exception(message)
             self.error_message(_('Unable to launch the browser'))

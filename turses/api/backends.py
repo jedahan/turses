@@ -134,7 +134,7 @@ def _to_list(a_list, **kwargs):
         'description': a_list.description,
         'member_count': a_list.member_count,
         'subscriber_count': a_list.subscriber_count,
-        'private': a_list.mode == u'private',
+        'private': a_list.mode == 'private',
     }
 
     defaults.update(**kwargs)
@@ -249,7 +249,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
                 if user in tweet.text:
                     return True
 
-        return filter(belongs_to_conversation, tweets_from_participants)
+        return list(filter(belongs_to_conversation, tweets_from_participants))
 
     def _get_older_and_newer_tweets(self, screen_name, tweet_id, count=20):
         """
@@ -280,7 +280,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
             return (message.sender_screen_name == with_user or
                     message.recipient_screen_name == with_user)
 
-        return filter(belongs_to_conversation, messages)
+        return list(filter(belongs_to_conversation, messages))
 
     @to_status
     @include_entities
